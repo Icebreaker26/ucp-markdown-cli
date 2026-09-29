@@ -1,0 +1,21 @@
+{
+  "name": "ucp-markdown-cli",
+  "version": "0.1.0",
+  "description": "Herramienta local para escribir el informe de opción de grado (IST, UCP) en Markdown: fuentes IEEE, checklist de formato real, pendientes, bitácora de uso de IA y exportación a .docx conforme.",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "init": "node src/cli.js init",
+    "status": "node src/cli.js status",
+    "fuentes": "node src/cli.js fuentes",
+    "pendientes": "node src/cli.js pendientes",
+    "ialog": "node src/cli.js ialog",
+    "export": "node src/cli.js export",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "docx": "^9.1.1"
+  }
+}
