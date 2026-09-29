@@ -9,20 +9,24 @@ import { escanearCitas } from './citas.js';
 import { agregarFuente, reverificarTodas } from './fuentes.js';
 import { agregarEntrada, leerLog } from './ialog.js';
 import { exportarDocx } from './exportar.js';
+import { IMG_DIR, listarImagenes, guardarImagen } from './imagenes.js';
 
 const PUBLIC_DIR = path.join(ROOT, 'public');
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
+const MIME = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.bmp': 'image/bmp',
+};
 
 function send(res, status, body, type = 'application/json; charset=utf-8') {
   res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' });
   res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body));
 }
 
-async function readBody(req) {
+async function readBody(req, limite = 2e6) {
   let raw = '';
   for await (const chunk of req) {
     raw += chunk;
-    if (raw.length > 2e6) throw new Error('Cuerpo demasiado grande');
+    if (raw.length > limite) throw new Error('Cuerpo demasiado grande');
   }
   return raw ? JSON.parse(raw) : {};
 }
@@ -47,10 +51,22 @@ export function createServer() {
       }
 
       if (req.method === 'GET' && url.pathname === '/api/data') {
-        const [{ capitulos, numeroCitas }, checklist, pendientes, fuentes, portada, ialog] = await Promise.all([
-          payloadCapitulos(), correrChecklist(), escanearPendientes(), leerFuentes(), leerPortada(), leerLog(),
+        const [{ capitulos, numeroCitas }, checklist, pendientes, fuentes, portada, ialog, imagenes] = await Promise.all([
+          payloadCapitulos(), correrChecklist(), escanearPendientes(), leerFuentes(), leerPortada(), leerLog(), listarImagenes(),
         ]);
-        return send(res, 200, { capitulos, numeroCitas, checklist, pendientes, fuentes, portada, ialog });
+        return send(res, 200, { capitulos, numeroCitas, checklist, pendientes, fuentes, portada, ialog, imagenes });
+      }
+
+      if (req.method === 'POST' && url.pathname === '/api/imagenes') {
+        try {
+          const { nombre, datos } = await readBody(req, 20e6);
+          if (!nombre || !datos) return send(res, 400, { error: 'Falta el archivo' });
+          const base64 = datos.includes(',') ? datos.slice(datos.indexOf(',') + 1) : datos;
+          const ruta = await guardarImagen(nombre, base64);
+          return send(res, 200, { ruta });
+        } catch (e) {
+          return send(res, 400, { error: e.message });
+        }
       }
 
       if (req.method === 'POST' && url.pathname === '/api/capitulo') {
@@ -100,6 +116,17 @@ export function createServer() {
           return send(res, 200, buf, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         } catch {
           return send(res, 404, { error: 'Todavía no exportaste nada' });
+        }
+      }
+
+      if (req.method === 'GET' && url.pathname.startsWith('/capitulos/img/')) {
+        const nombre = path.basename(url.pathname); // nunca subcarpetas ni "..": solo el nombre de archivo
+        const full = path.join(IMG_DIR, nombre);
+        if (!full.startsWith(IMG_DIR)) return send(res, 403, 'Prohibido', 'text/plain');
+        try {
+          return send(res, 200, await fs.readFile(full), MIME[path.extname(full).toLowerCase()] || 'application/octet-stream');
+        } catch {
+          return send(res, 404, 'No encontrado', 'text/plain');
         }
       }
 

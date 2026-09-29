@@ -10,6 +10,7 @@ import { agregarEntrada, leerLog } from './ialog.js';
 import { exportarDocx } from './exportar.js';
 import { createServer } from './server.js';
 import { promises as fs } from 'node:fs';
+import { spawn } from 'node:child_process';
 
 const C = { dim: '\x1b[2m', red: '\x1b[31m', green: '\x1b[32m', yellow: '\x1b[33m', bold: '\x1b[1m', off: '\x1b[0m' };
 const ok = (b) => (b ? `${C.green}✓${C.off}` : `${C.red}✗${C.off}`);
@@ -111,8 +112,19 @@ async function exportCmd() {
 async function serve() {
   const port = Number(process.env.PORT) || 4321;
   createServer().listen(port, '127.0.0.1', () => {
-    console.log(`Panel en ${C.bold}http://127.0.0.1:${port}${C.off}  (Ctrl+C para salir)`);
+    const url = `http://127.0.0.1:${port}`;
+    console.log(`Panel en ${C.bold}${url}${C.off}  (Ctrl+C para salir)`);
+    abrirNavegador(url);
   });
+}
+
+function abrirNavegador(url) {
+  const [comando, args] =
+    process.platform === 'win32' ? ['cmd', ['/c', 'start', '', url]] :
+    process.platform === 'darwin' ? ['open', [url]] :
+    process.platform === 'linux' ? ['xdg-open', [url]] : [null, []];
+  if (!comando) return;
+  spawn(comando, args, { stdio: 'ignore', detached: true }).unref();
 }
 
 const commands = { init, status, fuentes: fuentesCmd, pendientes: pendientesCmd, ialog: ialogCmd, export: exportCmd, serve };

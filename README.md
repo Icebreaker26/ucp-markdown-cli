@@ -13,16 +13,26 @@ Node.js 20 o superior. `npm install` instala una sola dependencia (`docx`, para 
 ```bash
 npm install
 npm run init      # crea capitulos/*.md (las 14 secciones de la Tabla 4), portada.json, fuentes.json
-npm start         # abre el panel en http://127.0.0.1:4321
+npm start         # abre el panel en http://127.0.0.1:4321 y lo abre solo en tu navegador
 ```
 
 Podés escribir desde el panel o directo en `capitulos/*.md` con tu editor de siempre — ambos leen y guardan los mismos archivos, sin pisarse.
+
+**Para no tocar la consola después del primer `npm install` + `npm run init`:** hacé doble clic en `Iniciar panel.bat` (en la raíz del proyecto). Abre el panel en el navegador solo; dejá esa ventana negra abierta mientras trabajás y cerrala para apagar el servidor.
+
+## Respaldo de tu contenido
+
+Tu informe real (`capitulos/*.md`, `capitulos/img/`, `fuentes.json`, `portada.json`, `ia-log.md`) **nunca se sube al repo** — así lo dejamos a propósito, para que nadie más vea tu trabajo en curso. Eso significa que la única copia vive en tu disco: si se daña o perdés la carpeta, se pierde el informe.
+
+Hacé doble clic en `Hacer respaldo.bat` cuando quieras (antes de un cambio grande, al final del día, etc.). Crea un `.zip` con fecha y hora dentro de `respaldos/` — por ejemplo `respaldos/respaldo-2026-09-29_1418.zip` — con todo tu contenido. Los `.zip` se acumulan ahí, así que de vez en cuando podés borrar los más viejos a mano.
+
+`respaldos/` tampoco se sube al repo (está en `.gitignore`), porque son solo copias locales. Para estar realmente a salvo (ej. si el disco falla), copiá de tanto en tanto la carpeta `respaldos/` a un USB, a Google Drive/OneDrive, o a donde prefieras guardar algo importante fuera de esta computadora.
 
 ## El panel (`npm start`)
 
 - **Capítulos** — un editor por sección, con una barra de herramientas arriba:
   - **+ Cita** — elegís la fuente de una lista (ya con su autor y título, no tenés que acordarte de la clave) y opcionalmente una página; inserta `[@clave]` o `[@clave p.12]` en el cursor.
-  - **+ Imagen** — ruta del archivo y descripción; inserta `![descripción](ruta)`.
+  - **+ Imagen** — subís el archivo desde tu computador (o elegís uno ya subido antes) y le ponés descripción; inserta `![descripción](ruta)`.
   - **+ Tabla** — un mini-constructor: filas, columnas y un título; llenás las celdas en una grilla y arma el markdown de la tabla completo, con su comentario de título.
   - **+ Pendiente** — inserta `[PENDIENTE: ]` con el cursor listo para escribir la nota.
 - **Fuentes** — agregar una fuente verifica la URL en el momento (petición real, no simulada) y muestra su número IEEE actual.
