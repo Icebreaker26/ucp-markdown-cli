@@ -8,6 +8,7 @@ import { escanearCitas } from './citas.js';
 import { agregarFuente, listarFuentes, reverificarTodas } from './fuentes.js';
 import { agregarEntrada, leerLog } from './ialog.js';
 import { exportarDocx } from './exportar.js';
+import { createServer } from './server.js';
 import { promises as fs } from 'node:fs';
 
 const C = { dim: '\x1b[2m', red: '\x1b[31m', green: '\x1b[32m', yellow: '\x1b[33m', bold: '\x1b[1m', off: '\x1b[0m' };
@@ -107,10 +108,17 @@ async function exportCmd() {
   console.log(`${C.green}Listo:${C.off} ${out}`);
 }
 
-const commands = { init, status, fuentes: fuentesCmd, pendientes: pendientesCmd, ialog: ialogCmd, export: exportCmd };
+async function serve() {
+  const port = Number(process.env.PORT) || 4321;
+  createServer().listen(port, '127.0.0.1', () => {
+    console.log(`Panel en ${C.bold}http://127.0.0.1:${port}${C.off}  (Ctrl+C para salir)`);
+  });
+}
+
+const commands = { init, status, fuentes: fuentesCmd, pendientes: pendientesCmd, ialog: ialogCmd, export: exportCmd, serve };
 const cmd = process.argv[2];
 if (!commands[cmd]) {
-  console.log('Uso: npm run <init | status | fuentes | pendientes | ialog | export>');
+  console.log('Uso: npm run <init | status | fuentes | pendientes | ialog | export | start>');
   process.exit(cmd ? 1 : 0);
 }
 try {

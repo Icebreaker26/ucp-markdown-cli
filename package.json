@@ -13,6 +13,7 @@
     "pendientes": "node src/cli.js pendientes",
     "ialog": "node src/cli.js ialog",
     "export": "node src/cli.js export",
+    "start": "node src/cli.js serve",
     "test": "node --test test/"
   },
   "dependencies": {

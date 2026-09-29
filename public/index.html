@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Informe — panel local</title>
+<style>
+:root{
+  --bg:#F7F7F5; --surface:#FFFFFF; --ink:#1F2328; --muted:#5B6169; --line:#DDDFE2; --soft:#EEF0F2;
+  --accent:#2A5DB0; --accent-ink:#FFFFFF;
+  --ok:#1E7A46; --ok-bg:#E6F4EB; --warn:#8A5B00; --warn-bg:#FBF1DC; --bad:#B3261E; --bad-bg:#FBEAE8;
+  --mono:ui-monospace,Consolas,"Cascadia Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{color-scheme:dark;
+    --bg:#14161A; --surface:#1C1F24; --ink:#E9EAEC; --muted:#9AA1AA; --line:#2C3038; --soft:#22262C;
+    --accent:#6FA3EE; --accent-ink:#0B1220;
+    --ok:#6FCF9F; --ok-bg:#123321; --warn:#F2C56B; --warn-bg:#332A10; --bad:#FF8A80; --bad-bg:#3A1F1D;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+.app{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
+aside{border-right:1px solid var(--line);background:var(--surface);padding:16px;display:flex;flex-direction:column;gap:4px}
+aside h1{font-size:1.05rem;margin:0 0 2px}
+aside .sub{color:var(--muted);font-size:.78rem;margin-bottom:14px}
+nav button{display:block;width:100%;text-align:left;padding:9px 10px;border:none;background:none;color:var(--ink);border-radius:7px;cursor:pointer;font:inherit;font-size:.9rem}
+nav button:hover{background:var(--soft)}
+nav button.activo{background:var(--accent);color:var(--accent-ink)}
+main{padding:22px 28px;max-width:920px}
+h2{margin:0 0 4px}
+.desc{color:var(--muted);font-size:.85rem;margin-bottom:18px}
+button.primary{font:600 .85rem var(--sans);padding:9px 16px;border-radius:7px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+button.secundario{font:600 .82rem var(--sans);padding:7px 12px;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+button:disabled{opacity:.6;cursor:progress}
+input,textarea,select{font:.88rem var(--sans);padding:8px 10px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%}
+textarea{font-family:var(--mono);font-size:.86rem;line-height:1.5;min-height:420px;resize:vertical}
+label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:4px;margin-top:10px}
+.fila{display:flex;gap:8px;align-items:center}
+.chip{font:600 .68rem var(--mono);padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}.chip.bad{background:var(--bad-bg);color:var(--bad)}.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.lista-cap{list-style:none;margin:0 0 16px;padding:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.lista-cap li{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:.86rem}
+.lista-cap li:last-child{border-bottom:none}
+.lista-cap li:hover{background:var(--soft)}
+.lista-cap li.activo{background:var(--soft);font-weight:600}
+.checklist-grupo{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:18px 0 6px}
+.check-item{display:flex;gap:8px;padding:6px 0;font-size:.88rem;border-bottom:1px solid var(--soft)}
+.pend-item{padding:10px 12px;border:1px solid var(--line);border-radius:7px;margin-bottom:8px;font-size:.86rem;cursor:pointer}
+.pend-item:hover{background:var(--soft)}
+.pend-item .ref{color:var(--accent);font-family:var(--mono);font-size:.78rem}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:.72rem;text-transform:uppercase}
+.banner{border:1px solid var(--line);background:var(--soft);border-radius:7px;padding:10px 14px;margin-bottom:14px;font-size:.86rem}
+.banner.err{border-color:var(--bad);color:var(--bad)}
+.banner.ok{border-color:var(--ok);color:var(--ok)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 16px}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  aside{position:sticky;top:0;z-index:2;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px 16px}
+  aside h1,aside .sub{width:100%}
+  nav{display:flex;flex-wrap:wrap;gap:4px}
+  nav button{width:auto}
+  main{padding:16px}
+  main .grid2[style]{grid-template-columns:1fr !important}
+}
+.hint{font-size:.78rem;color:var(--muted);margin-top:6px}
+.insertar-panel{border:1px solid var(--line);background:var(--soft);border-radius:8px;padding:12px;margin-bottom:10px}
+.insertar-panel .fila{margin-top:8px}
+.tabla-grid{display:grid;gap:4px;margin-top:8px}
+.tabla-grid input{font-size:.82rem;padding:5px 6px}
+.tabla-grid .hdr{background:var(--surface);font-weight:600}
+pre{white-space:pre-wrap;font-family:var(--mono);font-size:.82rem;background:var(--soft);padding:12px;border-radius:7px}
+header.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>Informe</h1>
+    <div class="sub" id="resumenChecklist">cargando…</div>
+    <nav id="nav"></nav>
+    <div style="flex:1"></div>
+    <button class="primary" id="exportar">Exportar .docx</button>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<script>
+const H = { 'X-Requested-With': 'ucp-markdown-cli', 'Content-Type': 'application/json' };
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TABS = [
+  ['capitulos', 'Capítulos'], ['fuentes', 'Fuentes'], ['pendientes', 'Pendientes'],
+  ['checklist', 'Checklist'], ['ialog', 'Bitácora de IA'], ['portada', 'Portada'],
+];
+let state = null, tab = 'capitulos', capituloActivo = null;
+
+async function cargar() {
+  const r = await fetch('/api/data');
+  state = await r.json();
+  if (!capituloActivo) capituloActivo = state.capitulos.find(c => !c.generado)?.archivo;
+  render();
+}
+
+function renderNav() {
+  document.getElementById('nav').innerHTML = TABS.map(([id, label]) =>
+    `<button data-tab="${id}" class="${tab === id ? 'activo' : ''}">${label}</button>`).join('');
+  const pasan = state.checklist.pasan, total = state.checklist.total;
+  document.getElementById('resumenChecklist').textContent = `Checklist ${pasan}/${total} · ${state.pendientes.length} pendiente(s)`;
+}
+
+function vistaCapitulos() {
+  const lista = state.capitulos.map(c => {
+    const vacio = !c.generado && !c.contenido.replace(/<!--.*?-->/g, '').trim();
+    const marca = c.generado ? '<span class="chip">auto</span>' : vacio ? '<span class="chip bad">vacío</span>' : '<span class="chip ok">ok</span>';
+    return `<li data-archivo="${esc(c.archivo)}" class="${c.archivo === capituloActivo ? 'activo' : ''}">${esc(c.titulo)} ${marca}</li>`;
+  }).join('');
+
+  const actual = state.capitulos.find(c => c.archivo === capituloActivo);
+  const editor = actual?.generado
+    ? `<div class="banner">Este capítulo se genera automáticamente al exportar, a partir de fuentes.json y el orden real de citación. No se edita acá.</div>`
+    : `<div class="toolbar fila" style="gap:6px;margin-bottom:8px">
+         <button type="button" class="secundario" id="btnCita">+ Cita</button>
+         <button type="button" class="secundario" id="btnImagen">+ Imagen</button>
+         <button type="button" class="secundario" id="btnTabla">+ Tabla</button>
+         <button type="button" class="secundario" id="btnPendiente">+ Pendiente</button>
+       </div>
+       <div id="panelInsertar"></div>
+       <textarea id="editorTexto" lang="es" spellcheck="true" autocorrect="on">${esc(actual?.contenido || '')}</textarea>
+       <div class="hint">También podés escribir la sintaxis a mano: <code>[@clave]</code>, <code>![descripción](ruta.png)</code>, <code>&lt;!-- tabla: Título --&gt;</code>, <code>[PENDIENTE: nota]</code>.</div>
+       <div class="fila" style="margin-top:10px"><button class="primary" id="guardarCap">Guardar</button><span id="estadoGuardado" class="hint"></span></div>`;
+
+  return `
+    <header class="top"><div><h2>Capítulos</h2><div class="desc">Las 14 secciones de la Tabla 4 (Lineamientos IST-2026).</div></div></header>
+    <div class="grid2" style="grid-template-columns:260px minmax(0,1fr)">
+      <ul class="lista-cap">${lista}</ul>
+      <div>
+        <h3 style="margin-top:0">${esc(actual?.titulo || '')}</h3>
+        ${actual?.nota ? `<div class="hint" style="margin-bottom:10px">${esc(actual.nota)}</div>` : ''}
+        ${editor}
+      </div>
+    </div>`;
+}
+
+function vistaFuentes() {
+  const filas = Object.entries(state.fuentes).map(([clave, f]) => {
+    const n = state.numeroCitas[clave];
+    const v = f.url ? (f.verificada ? '<span class="chip ok">responde</span>' : '<span class="chip bad">no responde</span>') : '<span class="chip">sin URL</span>';
+    return `<tr><td>${n ? '['+n+']' : '<span class="hint">sin citar</span>'}</td><td><code>${esc(clave)}</code></td><td>${esc(f.tipo)}</td><td>${esc(f.autor)} (${esc(f.anio)})</td><td>${esc(f.titulo)}</td><td>${v}</td></tr>`;
+  }).join('');
+
+  return `
+    <header class="top"><div><h2>Fuentes</h2><div class="desc">Numeración IEEE por orden real de aparición en el texto.</div></div>
+      <button class="secundario" id="verificarTodas">Reverificar URLs</button></header>
+    <table><thead><tr><th>#</th><th>Clave</th><th>Tipo</th><th>Autor</th><th>Título</th><th>URL</th></tr></thead><tbody>${filas || '<tr><td colspan=6 class="hint">Sin fuentes todavía.</td></tr>'}</tbody></table>
+    <h3>Agregar fuente</h3>
+    <form id="formFuente">
+      <div class="grid2">
+        <div><label>Clave (opcional)</label><input name="clave" placeholder="enel2024"></div>
+        <div><label>Tipo</label><select name="tipo">
+          <option value="sitio-web">sitio-web</option><option value="libro">libro</option><option value="libro-en-linea">libro-en-línea</option>
+          <option value="capitulo">capítulo</option><option value="articulo">artículo</option><option value="tesis">tesis</option>
+          <option value="manual">manual</option><option value="patente">patente</option><option value="video">video</option>
+          <option value="software">software</option><option value="podcast">podcast</option><option value="dataset">dataset</option>
+        </select></div>
+        <div><label>Autor</label><input name="autor" required></div>
+        <div><label>Año</label><input name="anio" required></div>
+        <div style="grid-column:1/-1"><label>Título</label><input name="titulo" required></div>
+        <div style="grid-column:1/-1"><label>URL (opcional — se verifica al guardar)</label><input name="url" type="url"></div>
+      </div>
+      <div class="fila" style="margin-top:12px"><button class="primary" type="submit">Agregar</button><span id="estadoFuente" class="hint"></span></div>
+    </form>`;
+}
+
+function vistaPendientes() {
+  if (!state.pendientes.length) return `<h2>Pendientes</h2><div class="banner ok">Sin pendientes.</div>`;
+  const items = state.pendientes.map(p => `<div class="pend-item" data-archivo="${esc(p.archivo)}"><div class="ref">${esc(p.archivo)}:${p.linea}</div>${esc(p.nota)}</div>`).join('');
+  return `<h2>Pendientes</h2><div class="desc">Llevalos a una conversación aparte (Claude u otro) para resolverlos — la herramienta nunca lo hace sola. Clic para abrir el capítulo.</div>${items}`;
+}
+
+function vistaChecklist() {
+  let out = '', grupo = null;
+  for (const it of state.checklist.items) {
+    if (it.grupo !== grupo) { grupo = it.grupo; out += `<div class="checklist-grupo">${esc(grupo)}</div>`; }
+    out += `<div class="check-item"><span class="chip ${it.ok ? 'ok' : 'bad'}">${it.ok ? '✓' : '✗'}</span> ${esc(it.detalle)}</div>`;
+  }
+  return `<h2>Checklist</h2><div class="desc">${state.checklist.pasan}/${state.checklist.total} — contra los Lineamientos IST-2026 y la Guía FCBI reales.</div>${out}`;
+}
+
+function vistaIalog() {
+  return `<h2>Bitácora de uso de IA</h2>
+    <div class="desc">Alimenta la sección obligatoria "Declaración de uso de IA". La IA nunca redacta texto que termine tal cual en el informe: solo sugiere, verifica o critica.</div>
+    <form id="formIalog">
+      <label>¿Qué se preguntó?</label><textarea name="pregunta" style="min-height:70px" required></textarea>
+      <label>¿Qué se usó del resultado?</label><textarea name="uso" style="min-height:70px"></textarea>
+      <label>¿Cómo se verificó?</label><input name="verificado">
+      <div class="fila" style="margin-top:10px"><button class="primary" type="submit">Agregar entrada</button></div>
+    </form>
+    <h3>Historial</h3>
+    <pre>${esc(state.ialog)}</pre>`;
+}
+
+function vistaPortada() {
+  const p = state.portada || {};
+  const campo = (name, label) => `<label>${label}</label><input name="${name}" value="${esc(p[name] || '')}">`;
+  return `<h2>Portada / contraportada</h2>
+    <form id="formPortada">
+      <div class="grid2">
+        ${campo('titulo', 'Título del trabajo')}
+        ${campo('autores', 'Autor(es)')}
+        ${campo('institucion', 'Institución')}
+        ${campo('facultad', 'Facultad')}
+        ${campo('programa', 'Programa')}
+        ${campo('ciudad', 'Ciudad')}
+        ${campo('anio', 'Año')}
+        ${campo('director', 'Director')}
+        ${campo('cargoDirector', 'Cargo del director')}
+      </div>
+      <label>Tipo de documento (para la contraportada)</label>
+      <input name="tipoDocumento" value="${esc(p.tipoDocumento || '')}" style="width:100%">
+      <div class="fila" style="margin-top:12px"><button class="primary" type="submit">Guardar</button></div>
+    </form>`;
+}
+
+function render() {
+  renderNav();
+  const vistas = { capitulos: vistaCapitulos, fuentes: vistaFuentes, pendientes: vistaPendientes, checklist: vistaChecklist, ialog: vistaIalog, portada: vistaPortada };
+  document.getElementById('main').innerHTML = vistas[tab]();
+}
+
+document.getElementById('nav').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-tab]'); if (!b) return;
+  tab = b.dataset.tab; render();
+});
+
+// Se guarda al abrir cada panel (o al insertar directo), NO se relee al confirmar:
+// si se releyera en ese momento, cualquier clic en los campos del propio panel
+// (fuente, página, celdas de la tabla) puede haber alterado la selección real del
+// textarea y el texto terminaría insertado en el lugar equivocado.
+let cursorGuardado = null;
+function guardarCursor() {
+  const ta = document.getElementById('editorTexto');
+  if (ta) cursorGuardado = { inicio: ta.selectionStart, fin: ta.selectionEnd };
+}
+function cerrarPanel() {
+  const p = document.getElementById('panelInsertar');
+  if (p) p.innerHTML = '';
+}
+function insertarEnTextarea(texto) {
+  const ta = document.getElementById('editorTexto');
+  if (!ta) return;
+  const { inicio, fin } = cursorGuardado || { inicio: ta.selectionStart, fin: ta.selectionEnd };
+  ta.value = ta.value.slice(0, inicio) + texto + ta.value.slice(fin);
+  const nuevaPos = inicio + texto.length;
+  cursorGuardado = null;
+  cerrarPanel();
+  ta.focus();
+  ta.setSelectionRange(nuevaPos, nuevaPos);
+}
+
+function panelCita() {
+  const claves = Object.keys(state.fuentes);
+  if (!claves.length) {
+    return `<div class="insertar-panel"><div class="hint">No tenés fuentes guardadas todavía. Agrega una en la pestaña "Fuentes" primero.</div>
+      <div class="fila"><button type="button" class="secundario" id="cancelarInsertar">Cerrar</button></div></div>`;
+  }
+  const opciones = claves.map((k) => {
+    const f = state.fuentes[k];
+    return `<option value="${esc(k)}">${esc(k)} — ${esc(f.autor)}, "${esc(f.titulo)}"</option>`;
+  }).join('');
+  return `<div class="insertar-panel">
+    <label>Fuente</label><select id="citaFuente">${opciones}</select>
+    <label>Página (opcional — cita directa con página)</label><input id="citaPagina" placeholder="ej. 12">
+    <div class="fila"><button type="button" class="primary" id="confirmarCita">Insertar cita</button><button type="button" class="secundario" id="cancelarInsertar">Cancelar</button></div>
+  </div>`;
+}
+function panelImagen() {
+  return `<div class="insertar-panel">
+    <label>Ruta de la imagen (relativa a la carpeta del proyecto)</label><input id="imgRuta" placeholder="capitulos/img/arquitectura.png">
+    <label>Descripción / pie de figura</label><input id="imgCaption" placeholder="Arquitectura simplificada de CORE">
+    <div class="fila"><button type="button" class="primary" id="confirmarImagen">Insertar figura</button><button type="button" class="secundario" id="cancelarInsertar">Cancelar</button></div>
+  </div>`;
+}
+function panelTabla(filas = 2, cols = 2) {
+  let grid = '';
+  for (let r = 0; r < filas; r++) {
+    for (let c = 0; c < cols; c++) {
+      grid += `<input class="celda ${r === 0 ? 'hdr' : ''}" data-r="${r}" data-c="${c}" placeholder="${r === 0 ? 'Columna ' + (c + 1) : ''}">`;
+    }
+  }
+  return `<div class="insertar-panel">
+    <label>Título de la tabla</label><input id="tablaCaption" placeholder="Comparación antes/después">
+    <div class="fila" style="align-items:flex-end">
+      <div><label>Filas (incluye encabezado)</label><input id="tablaFilas" type="number" min="2" value="${filas}" style="width:80px"></div>
+      <div><label>Columnas</label><input id="tablaCols" type="number" min="1" value="${cols}" style="width:80px"></div>
+      <button type="button" class="secundario" id="regenerarGrid">Actualizar tamaño</button>
+    </div>
+    <div class="tabla-grid" id="tablaGrid" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${grid}</div>
+    <div class="fila"><button type="button" class="primary" id="confirmarTabla">Insertar tabla</button><button type="button" class="secundario" id="cancelarInsertar">Cancelar</button></div>
+  </div>`;
+}
+
+document.getElementById('main').addEventListener('click', async (e) => {
+  if (e.target.id === 'btnCita') { guardarCursor(); return void (document.getElementById('panelInsertar').innerHTML = panelCita()); }
+  if (e.target.id === 'btnImagen') { guardarCursor(); return void (document.getElementById('panelInsertar').innerHTML = panelImagen()); }
+  if (e.target.id === 'btnTabla') { guardarCursor(); return void (document.getElementById('panelInsertar').innerHTML = panelTabla()); }
+  if (e.target.id === 'btnPendiente') {
+    guardarCursor();
+    const inicioPend = cursorGuardado.inicio;
+    insertarEnTextarea('[PENDIENTE: ]');
+    const ta = document.getElementById('editorTexto');
+    ta.setSelectionRange(inicioPend + 12, inicioPend + 12); // cursor justo antes del "]"
+    return;
+  }
+  if (e.target.id === 'cancelarInsertar') return cerrarPanel();
+  if (e.target.id === 'regenerarGrid') {
+    const f = Math.max(2, Number(document.getElementById('tablaFilas').value) || 2);
+    const c = Math.max(1, Number(document.getElementById('tablaCols').value) || 2);
+    document.getElementById('panelInsertar').innerHTML = panelTabla(f, c);
+    return;
+  }
+  if (e.target.id === 'confirmarCita') {
+    const clave = document.getElementById('citaFuente').value;
+    const pagina = document.getElementById('citaPagina').value.trim();
+    return insertarEnTextarea(pagina ? `[@${clave} p.${pagina}]` : `[@${clave}]`);
+  }
+  if (e.target.id === 'confirmarImagen') {
+    const ruta = document.getElementById('imgRuta').value.trim();
+    const cap = document.getElementById('imgCaption').value.trim();
+    if (!ruta) return;
+    return insertarEnTextarea(`![${cap}](${ruta})`);
+  }
+  if (e.target.id === 'confirmarTabla') {
+    const caption = document.getElementById('tablaCaption').value.trim();
+    const celdas = [...document.querySelectorAll('#tablaGrid .celda')];
+    const filas = Math.max(...celdas.map((c) => Number(c.dataset.r))) + 1;
+    const cols = Math.max(...celdas.map((c) => Number(c.dataset.c))) + 1;
+    const valores = Array.from({ length: filas }, () => Array(cols).fill(' '));
+    celdas.forEach((c) => { valores[Number(c.dataset.r)][Number(c.dataset.c)] = c.value.trim() || ' '; });
+    const filaTexto = (fila) => `| ${fila.join(' | ')} |`;
+    const separador = `| ${Array(cols).fill('---').join(' | ')} |`;
+    const md = [caption ? `<!-- tabla: ${caption} -->` : '', filaTexto(valores[0]), separador, ...valores.slice(1).map(filaTexto)]
+      .filter(Boolean).join('\n') + '\n';
+    return insertarEnTextarea(md);
+  }
+
+  const li = e.target.closest('.lista-cap li');
+  if (li) { capituloActivo = li.dataset.archivo; render(); return; }
+
+  const pend = e.target.closest('.pend-item');
+  if (pend) { tab = 'capitulos'; capituloActivo = pend.dataset.archivo; render(); return; }
+
+  if (e.target.id === 'guardarCap') {
+    const contenido = document.getElementById('editorTexto').value;
+    const estado = document.getElementById('estadoGuardado');
+    estado.textContent = 'guardando…';
+    const r = await fetch('/api/capitulo', { method: 'POST', headers: H, body: JSON.stringify({ archivo: capituloActivo, contenido }) });
+    estado.textContent = r.ok ? 'guardado ✓' : 'error al guardar';
+    await cargar();
+  }
+
+  if (e.target.id === 'verificarTodas') {
+    e.target.disabled = true; e.target.textContent = 'verificando…';
+    await fetch('/api/fuentes/verificar', { method: 'POST', headers: H });
+    await cargar();
+  }
+});
+
+document.getElementById('main').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const datos = Object.fromEntries(new FormData(e.target).entries());
+
+  if (e.target.id === 'formFuente') {
+    const estado = document.getElementById('estadoFuente');
+    estado.textContent = 'verificando URL y guardando…';
+    const r = await fetch('/api/fuentes', { method: 'POST', headers: H, body: JSON.stringify(datos) });
+    const j = await r.json();
+    estado.textContent = r.ok ? `agregada [${j.key}]` : `error: ${j.error}`;
+    if (r.ok) { e.target.reset(); await cargar(); }
+  }
+
+  if (e.target.id === 'formIalog') {
+    await fetch('/api/ialog', { method: 'POST', headers: H, body: JSON.stringify(datos) });
+    e.target.reset(); await cargar();
+  }
+
+  if (e.target.id === 'formPortada') {
+    await fetch('/api/portada', { method: 'POST', headers: H, body: JSON.stringify(datos) });
+    await cargar();
+  }
+});
+
+document.getElementById('exportar').addEventListener('click', async () => {
+  const btn = document.getElementById('exportar');
+  btn.disabled = true; btn.textContent = 'Exportando…';
+  const r = await fetch('/api/export', { method: 'POST', headers: H });
+  const j = await r.json();
+  btn.disabled = false; btn.textContent = 'Exportar .docx';
+  if (r.ok) window.open('/informe.docx', '_blank');
+  else alert('Error al exportar: ' + j.error);
+});
+
+cargar();
+</script>
+</body>
+</html>
