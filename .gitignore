@@ -3,3 +3,10 @@ informe.docx
 informe.pdf
 preview-*.png
 .claude/
+
+# Tus datos: el informe real, tus fuentes y tu portada. Nunca se suben — "npm run init"
+# los vuelve a crear vacíos en cualquier clon nuevo.
+capitulos/*.md
+fuentes.json
+portada.json
+ia-log.md
